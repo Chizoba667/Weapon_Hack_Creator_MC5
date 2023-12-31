@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="logo.png" />
+    <title>CE Checkbox Page</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background-color: #1a1a1a;
+            color: #00ff00;
+            text-align: center;
+            margin: 50px;
+        }
+
+        h2 {
+            color: #ff4500;
+        }
+
+        nav {
+            margin-bottom: 20px;
+        }
+
+        nav a {
+            color: #00ff00;
+            text-decoration: none;
+            margin: 0 10px;
+            font-weight: bold;
+            padding: 5px 10px;
+            border-radius: 5px;
+            background-color: #4CAF50;
+            transition: background-color 0.3s;
+        }
+
+        nav a:hover {
+            background-color: #45a049;
+        }
+
+        label {
+            color: #00ff00;
+            margin-top: 10px;
+            display: block;
+        }
+
+        textarea, input {
+            padding: 5px;
+            margin-bottom: 10px;
+            width: 80%;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin: 5px;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        #error {
+            color: #ff0000;
+            margin-top: 10px;
+        }
+
+        #result {
+            height: 300px;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <a href="/">Home</a>
+        <a href="/weapon-value">Weapon Value</a>
+        <a href="/ce-checkbox.html">CE Checkbox</a>
+        <a href="/togglebox.html">Toggle Box</a>
+    </nav>
+
+    <h2>CE Checkbox Page</h2>
+
+    <label for="ceCheckboxNumber">Choose CE Checkbox Number:</label>
+    <input type="number" id="ceCheckboxNumber" placeholder="Enter CE Checkbox number" min="1" style="width: 80%;">
+
+    <label for="newValue">Weapon Value:</label>
+    <input type="text" id="newValue" placeholder="Enter a new value">
+
+    <button onclick="generateCECheckboxCode()">Generate Code</button>
+
+    <h3>Result:</h3>
+    <textarea id="result" readonly></textarea>
+
+    <button onclick="copyCode()">Copy Code</button>
+
+    <p id="error"></p>
+
+    <script>
+        function generateCECheckboxCode() {
+            var ceCheckboxNumber = document.getElementById('ceCheckboxNumber').value;
+            var newValue = document.getElementById('newValue').value;
+
+            if (ceCheckboxNumber === '') {
+                document.getElementById('error').innerText = 'Please enter CE Checkbox number.';
+                return;
+            }
+
+            var enableCode = `
+if UDF1.CECheckbox${ceCheckboxNumber}.State == cbChecked then
+    autoAssemble[[
+        alloc(newmem, 2048, "WindowsEntryPoint.Windows_W10.exe"+28CC82)
+        label(returnhere)
+        label(originalcode)
+        label(exit)
+
+        newmem:
+        mov [r8+rcx+18],#${newValue}
+
+        originalcode:
+        //mov [r8+rcx+18],ebx
+
+        exit:
+        jmp returnhere
+
+        "WindowsEntryPoint.Windows_W10.exe"+28CC82:
+        jmp newmem
+        returnhere:
+    ]]
+`;
+
+            var disableCode = `
+else
+    autoAssemble[[
+        dealloc(newmem)
+        "WindowsEntryPoint.Windows_W10.exe"+28CC82:
+        db 41 89 5C 08 18
+        //mov [r8+rcx+18],ebx
+    ]]
+end
+`;
+
+            var fullCode = enableCode + disableCode;
+
+            document.getElementById('result').value = fullCode;
+            document.getElementById('error').innerText = '';
+        }
+
+        function copyCode() {
+            var codeTextarea = document.getElementById('result');
+            codeTextarea.select();
+            document.execCommand('copy');
+            alert('Code copied to clipboard!');
+        }
+    </script>
+
+</body>
+</html>
